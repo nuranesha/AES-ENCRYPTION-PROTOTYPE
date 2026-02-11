@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Prototype - RECEIVER</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        /* Shared CSS from sender */
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f0f2f5; }
+        .container { background: white; padding: 25px; border: 1px solid #ddd; width: 380px; min-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .screen { display: none; }
+        .active { display: block; }
+        h2 { border-bottom: 2px solid #28a745; padding-bottom: 10px; color: #333; font-size: 1.2em; text-transform: uppercase; }
+        label { display: block; margin: 15px 0 5px; font-weight: 600; font-size: 0.85em; color: #555; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .display-box { background: #f8f9fa; border: 1px dashed #adb5bd; padding: 15px; word-break: break-all; margin-bottom: 15px; font-family: monospace; }
+        button { margin-top: 15px; padding: 12px; cursor: pointer; background: #28a745; border: none; border-radius: 4px; color: white; font-weight: bold; width: 100%; }
+        .error-text { color: #dc3545; font-weight: bold; margin-top: 10px; display: none; text-align: center; font-size: 0.9em; border: 1px solid #dc3545; padding: 8px; border-radius: 4px; background: #fdf2f2; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="receiver-step1" class="screen active">
+        <h2>RECEIVER</h2>
+        <label>Encrypted Message Received</label>
+        <div class="display-box" id="r1-display"></div>
+        <button onclick="showScreen('receiver-step2')">DECRYPT</button>
+    </div>
+
+    <div id="receiver-step2" class="screen">
+        <h2>RECEIVER</h2>
+        <label>Enter Decryption Key</label>
+        <input type="password" id="r2-key" placeholder="Enter matching key">
+        <div id="error-msg" class="error-text"> WRONG KEY! Decryption failed.</div>
+        <button onclick="decryptMessage()">VERIFY & DECRYPT</button>
+    </div>
+
+    <div id="receiver-step3" class="screen">
+        <h2>RECEIVER</h2>
+        <label>Original Plaintext Message</label>
+        <div class="display-box" id="r3-display" style="background: #e8f5e9; border: 1px solid #28a745;"></div>
+        <button onclick="window.location.href='sender.html'" style="background: #6c757d;">GO TO SENDER PAGE</button>
+    </div>
+</div>
+
+<script>
+    // Get the ciphertext from localStorage
+    const receivedCiphertext = localStorage.getItem('sharedCiphertext') || "No data received.";
+    document.getElementById('r1-display').innerText = receivedCiphertext;
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function decryptMessage() {
+        const inputKey = document.getElementById('r2-key').value;
+        const errorDiv = document.getElementById('error-msg');
+        
+        try {
+            const bytes = CryptoJS.AES.decrypt(receivedCiphertext, inputKey);
+            const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+            if (originalText.length > 0) {
+                document.getElementById('r3-display').innerText = originalText;
+                showScreen('receiver-step3');
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            errorDiv.style.display = "block";
+            document.getElementById('r2-key').value = "";
+        }
+    }
+</script>
+</body>
+</html>
